@@ -91,6 +91,23 @@ O frontend consome `http://localhost:3333/api` por padrao.
 - E-mail: `admin@dmsistemas.com`
 - Senha: `123456`
 
+## Colaboracao
+
+Branches de trabalho:
+
+- `main`: versao estavel
+- `develop`: integracao
+- `feat/*`, `fix/*`, `chore/*`: trabalho individual por tarefa
+
+Fluxo recomendado:
+
+1. Atualizar `develop`
+2. Criar branch propria para a tarefa
+3. Abrir PR para `develop`
+4. Promover `develop` para `main` quando a rodada estiver validada
+
+Detalhes completos em [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Fluxo de venda implementado
 
 1. Buscar produto por nome ou codigo de barras
