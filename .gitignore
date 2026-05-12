@@ -1,0 +1,21 @@
+# Dependencies
+backend/node_modules/
+frontend/node_modules/
+
+# Build output
+frontend/dist/
+
+# Environment
+backend/.env
+
+# Local database/runtime
+.mysql/
+
+# Logs and local run artifacts
+backend/*.log
+frontend/*.log
+frontend/dom.txt
+
+# OS/editor
+.DS_Store
+Thumbs.db
