@@ -185,7 +185,7 @@ export default function Caixa() {
       <div className="page-header">
         <div className="page-title">
           <h2>Caixa operacional</h2>
-          <p>Abra o caixa, acompanhe movimentos e feche o turno com conferencia.</p>
+          <p>Abra o caixa, acompanhe movimentos e feche o turno com conferência.</p>
         </div>
 
         <Button type="button" variant="secondary" onClick={carregarPainel}>

@@ -1,6 +1,8 @@
 import { pool } from '../config/database.js';
 import { obterSessaoAbertaDoUsuario } from './caixaService.js';
+import { obterResumoCreditoCliente } from './clienteService.js';
 import { registrarMovimentoEstoque } from './estoqueService.js';
+import { registrarFinanceiroVenda } from './financeiroService.js';
 import { garantirDocumentoFiscalPendente } from './fiscalService.js';
 import { createHttpError } from '../utils/http.js';
 import {
@@ -12,7 +14,7 @@ import {
   roundCurrency,
 } from '../utils/validators.js';
 
-const PAYMENT_METHODS = ['dinheiro', 'pix', 'cartao_credito', 'cartao_debito'];
+const PAYMENT_METHODS = ['dinheiro', 'pix', 'cartao_credito', 'cartao_debito', 'crediario'];
 
 function normalizeSaleAdjustments(dados) {
   return {
@@ -22,6 +24,13 @@ function normalizeSaleAdjustments(dados) {
 }
 
 function normalizeReceivedAmount(dados, formaPagamento, total) {
+  if (formaPagamento === 'crediario') {
+    return {
+      valorRecebido: 0,
+      troco: 0,
+    };
+  }
+
   if (formaPagamento !== 'dinheiro') {
     return {
       valorRecebido: total,
@@ -181,6 +190,22 @@ export async function finalizarVenda(usuario, dados) {
       }
     }
 
+    if (formaPagamento === 'crediario') {
+      if (!clienteId) {
+        throw createHttpError(400, 'Selecione um cliente para vender no crediario.');
+      }
+
+      const credito = await obterResumoCreditoCliente(connection, usuario.empresaId, clienteId);
+
+      if (!credito.ativo) {
+        throw createHttpError(409, 'O cliente selecionado nao possui crediario ativo.');
+      }
+
+      if (credito.credito_disponivel <= 0) {
+        throw createHttpError(409, 'O cliente nao possui limite disponivel para novas compras no crediario.');
+      }
+    }
+
     const [productRows] = await connection.query(
       `SELECT id, nome, codigo_barras, preco, estoque, ativo
        FROM produtos
@@ -225,6 +250,17 @@ export async function finalizarVenda(usuario, dados) {
 
     if (total <= 0) {
       throw createHttpError(400, 'O total da venda precisa ser maior que zero.');
+    }
+
+    if (formaPagamento === 'crediario') {
+      const credito = await obterResumoCreditoCliente(connection, usuario.empresaId, clienteId);
+
+      if (credito.credito_disponivel < total) {
+        throw createHttpError(
+          409,
+          `Limite insuficiente para o crediario. Disponivel: ${credito.credito_disponivel.toFixed(2)}.`
+        );
+      }
     }
 
     const { valorRecebido, troco } = normalizeReceivedAmount(dados, formaPagamento, total);
@@ -294,11 +330,20 @@ export async function finalizarVenda(usuario, dados) {
       });
     }
 
-    await connection.query(
+    const [paymentResult] = await connection.query(
       `INSERT INTO venda_pagamentos (venda_id, metodo, valor)
        VALUES (?, ?, ?)`,
       [vendaId, formaPagamento, total]
     );
+
+    await registrarFinanceiroVenda(connection, usuario, {
+      venda_id: vendaId,
+      venda_pagamento_id: paymentResult.insertId,
+      cliente_id: clienteId,
+      forma_pagamento: formaPagamento,
+      valor: total,
+      data_venda: new Date(),
+    });
 
     await garantirDocumentoFiscalPendente(connection, usuario, vendaId);
 

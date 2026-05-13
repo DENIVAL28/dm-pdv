@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BadgeDollarSign, CalendarRange, Package, ShoppingBag } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
 import EmptyState from '../components/EmptyState.jsx';
@@ -123,7 +122,9 @@ export default function Relatorios() {
         <section className="panel">
           <div className="panel-title">
             <h3>Vendas por dia</h3>
-            <p>Período de {formatDate(dados.periodo.data_inicial)} a {formatDate(dados.periodo.data_final)}.</p>
+            <p>
+              Período de {formatDate(dados.periodo.data_inicial)} a {formatDate(dados.periodo.data_final)}.
+            </p>
           </div>
 
           {loading ? (
@@ -228,7 +229,7 @@ export default function Relatorios() {
                         <span>
                           Subtotal {formatCurrency(venda.subtotal)}
                           {venda.desconto_valor ? ` | Desc. ${formatCurrency(venda.desconto_valor)}` : ''}
-                          {venda.acrescimo_valor ? ` | Acresc. ${formatCurrency(venda.acrescimo_valor)}` : ''}
+                          {venda.acrescimo_valor ? ` | Acrésc. ${formatCurrency(venda.acrescimo_valor)}` : ''}
                         </span>
                       </div>
                     </td>

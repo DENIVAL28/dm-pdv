@@ -147,6 +147,10 @@ export default function PDV() {
     acrescimoValor,
     valorRecebido,
   });
+  const crediarioSelecionado = formaPagamento === 'crediario';
+  const creditoDisponivel = Number(clienteSelecionado?.credito_disponivel || 0);
+  const creditoInsuficiente =
+    crediarioSelecionado && Boolean(clienteSelecionado) && draft.total > creditoDisponivel;
 
   function limparMensagens() {
     setFeedback(null);
@@ -367,8 +371,24 @@ export default function PDV() {
       return;
     }
 
+    if (crediarioSelecionado && !clienteId) {
+      setFeedback({
+        tone: 'error',
+        message: 'Selecione um cliente para vender no crediario.',
+      });
+      return;
+    }
+
     if (draft.desconto > draft.subtotal) {
       setFeedback({ tone: 'error', message: 'O desconto não pode ser maior que o subtotal.' });
+      return;
+    }
+
+    if (creditoInsuficiente) {
+      setFeedback({
+        tone: 'error',
+        message: `Limite insuficiente para o crediario. Disponivel: ${formatCurrency(creditoDisponivel)}.`,
+      });
       return;
     }
 
@@ -513,7 +533,7 @@ export default function PDV() {
     <div className="page-stack pdv-shell">
       <div className="page-header">
         <div className="page-title">
-          <h2>Caixa</h2>
+          <h2>Frente de caixa</h2>
           <p>Leitura rápida, conferência do pagamento e fechamento no mesmo fluxo.</p>
         </div>
 
@@ -847,6 +867,24 @@ export default function PDV() {
             </small>
           </div>
 
+          {crediarioSelecionado ? (
+            <div className="helper-card">
+              <span>Credito do cliente</span>
+              <strong>
+                {clienteSelecionado
+                  ? `${formatCurrency(clienteSelecionado.credito_disponivel || 0)} disponivel`
+                  : 'Selecione um cliente'}
+              </strong>
+              <small>
+                {clienteSelecionado
+                  ? `Limite ${formatCurrency(clienteSelecionado.limite_credito || 0)} | Utilizado ${formatCurrency(
+                      clienteSelecionado.credito_utilizado || 0
+                    )}`
+                  : 'O crediario so pode ser usado com um cliente identificado.'}
+              </small>
+            </div>
+          ) : null}
+
           <div className="payment-option-grid">
             {PAYMENT_METHODS.map((method) => (
               <button
@@ -900,6 +938,12 @@ export default function PDV() {
             </FeedbackBanner>
           ) : null}
 
+          {creditoInsuficiente ? (
+            <FeedbackBanner tone="error">
+              O total da venda ultrapassa o credito disponivel do cliente selecionado.
+            </FeedbackBanner>
+          ) : null}
+
           <div className="sale-breakdown">
             <div className="sale-breakdown-row">
               <span>Subtotal dos itens</span>
@@ -949,7 +993,9 @@ export default function PDV() {
               !carrinho.length ||
               finalizando ||
               draft.total <= 0 ||
-              draft.valorFaltante > 0
+              draft.valorFaltante > 0 ||
+              (crediarioSelecionado && !clienteId) ||
+              creditoInsuficiente
             }
           >
             <ShoppingCart size={16} />

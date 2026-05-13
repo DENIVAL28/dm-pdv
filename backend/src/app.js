@@ -8,6 +8,7 @@ import fornecedorRoutes from './routes/fornecedorRoutes.js';
 import compraRoutes from './routes/compraRoutes.js';
 import entradaRoutes from './routes/entradaRoutes.js';
 import estoqueRoutes from './routes/estoqueRoutes.js';
+import financeiroRoutes from './routes/financeiroRoutes.js';
 import fiscalRoutes from './routes/fiscalRoutes.js';
 import vendaRoutes from './routes/vendaRoutes.js';
 import relatorioRoutes from './routes/relatorioRoutes.js';
@@ -34,6 +35,7 @@ function sendApiEntry(res) {
       entradas: '/api/entradas',
       estoque_movimentos: '/api/estoque/movimentos',
       estoque_inventarios: '/api/estoque/inventarios',
+      financeiro: '/api/financeiro/resumo',
       fiscal: '/api/fiscal/documentos',
       vendas: '/api/vendas',
       relatorios: '/api/relatorios',
@@ -61,6 +63,7 @@ app.use('/api/fornecedores', fornecedorRoutes);
 app.use('/api/compras', compraRoutes);
 app.use('/api/entradas', entradaRoutes);
 app.use('/api/estoque', estoqueRoutes);
+app.use('/api/financeiro', financeiroRoutes);
 app.use('/api/fiscal', fiscalRoutes);
 app.use('/api/vendas', vendaRoutes);
 app.use('/api/relatorios', relatorioRoutes);

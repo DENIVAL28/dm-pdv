@@ -9,18 +9,18 @@ import { saveSession } from '../services/session.js';
 const HIGHLIGHTS = [
   {
     icon: Receipt,
-    label: 'Caixa',
-    text: 'Venda com leitura, carrinho e fechamento no mesmo fluxo.',
+    label: 'Atendimento',
+    text: 'Leitura, carrinho, conferência e fechamento da venda em um fluxo só.',
   },
   {
     icon: Package,
     label: 'Cadastro',
-    text: 'Produtos, clientes e estoque organizados no mesmo sistema.',
+    text: 'Produtos, clientes e estoque organizados para operação diária.',
   },
   {
     icon: ShieldCheck,
-    label: 'Consulta',
-    text: 'Resumo do dia e relatórios para acompanhar o movimento.',
+    label: 'Controle',
+    text: 'Resumo do dia, relatórios e acompanhamento do movimento da loja.',
   },
 ];
 
@@ -68,10 +68,10 @@ export default function Login() {
 
           <div className="auth-copy">
             <span className="overview-label">Acesso ao sistema</span>
-            <h1>Entrar para operar o mercado.</h1>
+            <h1>Entrar para operar a loja.</h1>
             <p>
-              Use o acesso local para abrir o caixa, consultar produtos e acompanhar o
-              movimento do dia.
+              Use o acesso local para abrir o caixa, consultar produtos, fechar
+              vendas e acompanhar o movimento do dia.
             </p>
           </div>
 

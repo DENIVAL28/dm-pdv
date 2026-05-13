@@ -7,19 +7,19 @@ import { clearSession, getSessionUser } from '../services/session.js';
 const PAGE_META = {
   '/app': {
     title: 'Painel',
-    description: 'Resumo da operacao de hoje e pontos que pedem atencao.',
+    description: 'Resumo do dia, atalhos rápidos e pontos que pedem atenção.',
   },
   '/app/caixa': {
     title: 'Caixa operacional',
-    description: 'Abra o caixa, acompanhe movimentos e feche o turno com conferencia.',
+    description: 'Abra o caixa, registre movimentos e feche o turno com conferência.',
   },
   '/app/pdv': {
-    title: 'PDV',
-    description: 'Busque produtos, monte o carrinho e conclua a venda no caixa aberto.',
+    title: 'Frente de caixa',
+    description: 'Leia produtos, revise o carrinho e conclua a venda no caixa aberto.',
   },
   '/app/fornecedores': {
     title: 'Fornecedores',
-    description: 'Cadastre parceiros usados em compras, entradas e reposicao do mercado.',
+    description: 'Cadastre parceiros de compra, reposição e recebimento de mercadorias.',
   },
   '/app/compras': {
     title: 'Compras e entradas',
@@ -27,23 +27,27 @@ const PAGE_META = {
   },
   '/app/produtos': {
     title: 'Produtos',
-    description: 'Cadastre, edite e acompanhe os itens vendidos no mercado.',
+    description: 'Cadastre, revise preço, código de barras, estoque e base fiscal.',
   },
   '/app/clientes': {
-    title: 'Clientes',
-    description: 'Mantenha a base de clientes pronta para identificar vendas com rapidez.',
+    title: 'Clientes e crédito',
+    description: 'Mantenha a ficha comercial, o histórico e o crediário do cliente organizados.',
   },
   '/app/estoque': {
     title: 'Estoque',
-    description: 'Acompanhe saldos, rupturas e itens abaixo do minimo.',
+    description: 'Acompanhe saldos, rupturas, ajustes e inventários do estoque.',
   },
   '/app/fiscal': {
     title: 'Fiscal',
-    description: 'Configure o emitente e acompanhe a emissao fiscal das vendas do caixa.',
+    description: 'Configure o emitente e acompanhe a emissão fiscal das vendas.',
+  },
+  '/app/financeiro': {
+    title: 'Financeiro',
+    description: 'Acompanhe contas, conciliação de cartão e fluxo financeiro da operação.',
   },
   '/app/relatorios': {
-    title: 'Relatorios',
-    description: 'Consulte vendas por periodo e formas de pagamento.',
+    title: 'Relatórios',
+    description: 'Consulte vendas por período, volume diário e formas de pagamento.',
   },
 };
 
@@ -78,7 +82,7 @@ export default function Topbar({ onOpenNav }) {
         <div className="topbar-intro">
           <div className="topbar-kicker-row">
             <span className="eyebrow">{usuario?.empresa?.nome || 'DM Sistemas'}</span>
-            <span className="topbar-chip">Caixa local</span>
+            <span className="topbar-chip">Operação local</span>
           </div>
           <h1>{meta.title}</h1>
           <p>{meta.description}</p>
@@ -89,7 +93,7 @@ export default function Topbar({ onOpenNav }) {
         <div className="date-chip">{dataAtual}</div>
         <div className="user-meta">
           <strong>{usuario?.nome || 'Usuario'}</strong>
-          <span>Sessao ativa</span>
+          <span>Sessão ativa</span>
         </div>
 
         <Button type="button" variant="secondary" size="sm" onClick={sair}>

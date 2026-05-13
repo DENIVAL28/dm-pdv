@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertTriangle, BadgeDollarSign, Package, ShoppingBag } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
@@ -59,7 +58,7 @@ export default function Dashboard() {
       <div className="page-header">
         <div className="page-title">
           <h2>Painel do dia</h2>
-          <p>Vendas, giro e produtos que exigem reposição imediata.</p>
+          <p>Vendas, giro e itens que pedem reposição com prioridade.</p>
         </div>
 
         <Button type="button" variant="secondary" onClick={carregarDashboard}>
@@ -72,18 +71,18 @@ export default function Dashboard() {
       <section className="overview-banner">
         <div className="overview-banner-copy">
           <span className="overview-label">Resumo operacional</span>
-          <h3>Caixa, estoque e consulta de vendas no mesmo painel.</h3>
+          <h3>Caixa, estoque e leitura de vendas no mesmo painel.</h3>
           <p>
-            Acompanhe o total vendido, veja itens que pedem reposição e entre direto nos
-            fluxos mais usados do dia.
+            Acompanhe o total vendido, veja itens que pedem reposição e entre direto
+            nos fluxos mais usados do dia sem trocar de contexto.
           </p>
 
           <div className="inline-actions">
             <Button type="button" onClick={() => navigate('/app/pdv')}>
-              Abrir caixa
+              Ir para a frente de caixa
             </Button>
             <Button type="button" variant="secondary" onClick={() => navigate('/app/produtos')}>
-              Abrir produtos
+              Abrir catálogo
             </Button>
           </div>
         </div>
@@ -125,7 +124,7 @@ export default function Dashboard() {
           tone="primary"
         />
         <Card
-          title="Produtos cadastrados"
+          title="Produtos ativos"
           value={resumo.produtos_cadastrados}
           helper={`${resumo.sem_estoque} sem estoque`}
           icon={Package}
@@ -133,7 +132,7 @@ export default function Dashboard() {
         <Card
           title="Estoque baixo"
           value={resumo.estoque_baixo}
-          helper="Itens com saldo no mínimo ou abaixo"
+          helper="Itens no mínimo ou abaixo dele"
           icon={AlertTriangle}
           tone="warning"
         />
@@ -187,7 +186,7 @@ export default function Dashboard() {
                           <span>
                             Subtotal {formatCurrency(sale.subtotal)}
                             {sale.desconto_valor ? ` | Desc. ${formatCurrency(sale.desconto_valor)}` : ''}
-                            {sale.acrescimo_valor ? ` | Acresc. ${formatCurrency(sale.acrescimo_valor)}` : ''}
+                            {sale.acrescimo_valor ? ` | Acrésc. ${formatCurrency(sale.acrescimo_valor)}` : ''}
                           </span>
                         </div>
                       </td>

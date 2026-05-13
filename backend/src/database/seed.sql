@@ -63,8 +63,39 @@ ON DUPLICATE KEY UPDATE
   identificador = VALUES(identificador),
   status = VALUES(status);
 
-INSERT INTO clientes (empresa_id, nome, documento, telefone)
-SELECT 1, 'Maria Oliveira', '12345678900', '(66) 99999-1001'
+INSERT INTO formas_pagamento_empresa (empresa_id, codigo, nome, tipo_recebimento, prazo_dias, taxa_percentual, ativo)
+VALUES
+  (1, 'dinheiro', 'Dinheiro', 'caixa', 0, 0.00, 1),
+  (1, 'pix', 'Pix', 'banco', 0, 0.00, 1),
+  (1, 'cartao_debito', 'Cartao de debito', 'cartao', 1, 1.99, 1),
+  (1, 'cartao_credito', 'Cartao de credito', 'cartao', 30, 3.49, 1),
+  (1, 'crediario', 'Crediario', 'crediario', 30, 0.00, 1)
+ON DUPLICATE KEY UPDATE
+  nome = VALUES(nome),
+  tipo_recebimento = VALUES(tipo_recebimento),
+  prazo_dias = VALUES(prazo_dias),
+  taxa_percentual = VALUES(taxa_percentual),
+  ativo = VALUES(ativo);
+
+INSERT INTO clientes (
+  empresa_id,
+  nome,
+  documento,
+  telefone,
+  email,
+  data_nascimento,
+  observacoes,
+  ativo
+)
+SELECT
+  1,
+  'Maria Oliveira',
+  '12345678900',
+  '(66) 99999-1001',
+  'maria.oliveira@cliente.com',
+  '1988-03-22',
+  'Cliente que costuma identificar compras no caixa.',
+  1
 WHERE NOT EXISTS (
   SELECT 1
   FROM clientes
@@ -72,14 +103,193 @@ WHERE NOT EXISTS (
     AND documento = '12345678900'
 );
 
-INSERT INTO clientes (empresa_id, nome, documento, telefone)
-SELECT 1, 'Joao Ferreira', '98765432100', '(66) 99999-2002'
+UPDATE clientes
+SET
+  nome = 'Maria Oliveira',
+  telefone = '(66) 99999-1001',
+  email = 'maria.oliveira@cliente.com',
+  data_nascimento = '1988-03-22',
+  observacoes = 'Cliente que costuma identificar compras no caixa.',
+  ativo = 1
+WHERE empresa_id = 1
+  AND documento = '12345678900';
+
+INSERT INTO clientes (
+  empresa_id,
+  nome,
+  documento,
+  telefone,
+  email,
+  data_nascimento,
+  observacoes,
+  ativo
+)
+SELECT
+  1,
+  'Joao Ferreira',
+  '98765432100',
+  '(66) 99999-2002',
+  'joao.ferreira@cliente.com',
+  '1982-11-09',
+  'Cliente com limite liberado para crediario local.',
+  1
 WHERE NOT EXISTS (
   SELECT 1
   FROM clientes
   WHERE empresa_id = 1
     AND documento = '98765432100'
 );
+
+UPDATE clientes
+SET
+  nome = 'Joao Ferreira',
+  telefone = '(66) 99999-2002',
+  email = 'joao.ferreira@cliente.com',
+  data_nascimento = '1982-11-09',
+  observacoes = 'Cliente com limite liberado para crediario local.',
+  ativo = 1
+WHERE empresa_id = 1
+  AND documento = '98765432100';
+
+INSERT INTO cliente_enderecos (
+  cliente_id,
+  titulo,
+  cep,
+  logradouro,
+  numero,
+  complemento,
+  bairro,
+  cidade,
+  estado,
+  principal
+)
+SELECT
+  c.id,
+  'Casa',
+  '78045000',
+  'Rua das Laranjeiras',
+  '120',
+  NULL,
+  'Jardim Primavera',
+  'Cuiaba',
+  'MT',
+  1
+FROM clientes c
+WHERE c.empresa_id = 1
+  AND c.documento = '12345678900'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM cliente_enderecos ce
+    WHERE ce.cliente_id = c.id
+      AND ce.principal = 1
+  );
+
+INSERT INTO cliente_enderecos (
+  cliente_id,
+  titulo,
+  cep,
+  logradouro,
+  numero,
+  complemento,
+  bairro,
+  cidade,
+  estado,
+  principal
+)
+SELECT
+  c.id,
+  'Casa',
+  '78050000',
+  'Avenida das Palmeiras',
+  '840',
+  'Fundos',
+  'Boa Esperanca',
+  'Cuiaba',
+  'MT',
+  1
+FROM clientes c
+WHERE c.empresa_id = 1
+  AND c.documento = '98765432100'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM cliente_enderecos ce
+    WHERE ce.cliente_id = c.id
+      AND ce.principal = 1
+  );
+
+INSERT INTO cliente_contatos (
+  cliente_id,
+  nome,
+  funcao,
+  telefone,
+  whatsapp,
+  email,
+  observacoes
+)
+SELECT
+  c.id,
+  'Maria Oliveira',
+  'Titular',
+  '(66) 99999-1001',
+  '(66) 99999-1001',
+  'maria.oliveira@cliente.com',
+  'Contato principal para avisos.'
+FROM clientes c
+WHERE c.empresa_id = 1
+  AND c.documento = '12345678900'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM cliente_contatos cc
+    WHERE cc.cliente_id = c.id
+  );
+
+INSERT INTO cliente_contatos (
+  cliente_id,
+  nome,
+  funcao,
+  telefone,
+  whatsapp,
+  email,
+  observacoes
+)
+SELECT
+  c.id,
+  'Joao Ferreira',
+  'Titular',
+  '(66) 99999-2002',
+  '(66) 99999-2002',
+  'joao.ferreira@cliente.com',
+  'Contato liberado para cobranca do crediario.'
+FROM clientes c
+WHERE c.empresa_id = 1
+  AND c.documento = '98765432100'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM cliente_contatos cc
+    WHERE cc.cliente_id = c.id
+  );
+
+INSERT INTO cliente_creditos (
+  cliente_id,
+  limite_credito,
+  dias_vencimento,
+  ativo,
+  observacoes
+)
+SELECT
+  c.id,
+  250.00,
+  30,
+  1,
+  'Limite inicial para vendas no crediario.'
+FROM clientes c
+WHERE c.empresa_id = 1
+  AND c.documento = '98765432100'
+ON DUPLICATE KEY UPDATE
+  limite_credito = VALUES(limite_credito),
+  dias_vencimento = VALUES(dias_vencimento),
+  ativo = VALUES(ativo),
+  observacoes = VALUES(observacoes);
 
 INSERT INTO fornecedores (empresa_id, razao_social, nome_fantasia, documento, telefone, email, contato_nome)
 SELECT 1, 'Alimentos do Vale LTDA', 'Distribuidora Vale', '11111111000191', '(66) 3333-1000', 'vendas@vale.com', 'Carlos'

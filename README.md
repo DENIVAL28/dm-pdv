@@ -28,6 +28,14 @@ Sistema web para pequenos mercados com foco em operacao diaria de caixa, cadastr
 - Documento fiscal pendente por venda
 - Emissao fiscal local com numeracao e chave
 - Cancelamento fiscal vinculado ao fluxo da venda
+- Contas a receber geradas automaticamente pelas vendas
+- Contas a pagar geradas automaticamente pelas entradas
+- Conciliacao de cartao com taxa e valor liquido
+- Lancamentos financeiros manuais
+- Ficha completa de cliente com endereco, contatos e observacoes
+- Historico comercial automatico por venda e recebimento
+- Credito por cliente com limite, prazo e saldo disponivel
+- Crediario integrado ao PDV e ao contas a receber
 - PDV com busca por nome ou codigo de barras
 - Selecao opcional de cliente no fechamento da venda
 - Desconto, acrescimo, valor recebido e troco no fechamento da venda
@@ -182,7 +190,17 @@ Detalhes completos em [CONTRIBUTING.md](./CONTRIBUTING.md).
 - `DELETE /api/produtos/:id`
 - `GET /api/clientes`
 - `POST /api/clientes`
+- `GET /api/clientes/:id`
+- `GET /api/clientes/:id/compras`
+- `GET /api/clientes/:id/historico`
 - `PUT /api/clientes/:id`
+- `POST /api/clientes/:id/enderecos`
+- `PUT /api/clientes/:id/enderecos/:enderecoId`
+- `DELETE /api/clientes/:id/enderecos/:enderecoId`
+- `POST /api/clientes/:id/contatos`
+- `PUT /api/clientes/:id/contatos/:contatoId`
+- `DELETE /api/clientes/:id/contatos/:contatoId`
+- `POST /api/clientes/:id/credito`
 - `DELETE /api/clientes/:id`
 - `GET /api/fornecedores`
 - `POST /api/fornecedores`
@@ -217,6 +235,15 @@ Detalhes completos em [CONTRIBUTING.md](./CONTRIBUTING.md).
 - `GET /api/fiscal/documentos/:id`
 - `POST /api/fiscal/documentos/venda/:vendaId/emitir`
 - `POST /api/fiscal/documentos/:id/cancelar`
+- `GET /api/financeiro/resumo`
+- `GET /api/financeiro/lancamentos`
+- `POST /api/financeiro/lancamentos`
+- `GET /api/financeiro/contas-receber`
+- `POST /api/financeiro/contas-receber/:id/receber`
+- `GET /api/financeiro/contas-pagar`
+- `POST /api/financeiro/contas-pagar/:id/pagar`
+- `GET /api/financeiro/conciliacoes/cartao`
+- `POST /api/financeiro/conciliacoes/cartao/:id/conciliar`
 - `POST /api/vendas`
 - `GET /api/vendas`
 - `POST /api/vendas/:id/cancelar`
@@ -232,6 +259,10 @@ Detalhes completos em [CONTRIBUTING.md](./CONTRIBUTING.md).
 - Entrada de mercadoria atualizando custo e estoque no mesmo fluxo
 - Movimentos de estoque gravados para venda, cancelamento, entrada, ajuste, perda e inventario
 - Cancelamento de venda bloqueado quando o documento fiscal estiver autorizado
+- Venda em cartao gerando conciliacao financeira
+- Venda no crediario exigindo cliente com limite disponivel
+- Recebimento de cliente atualizando historico e saldo do credito
+- Entrada de mercadoria gerando conta a pagar
 - Transacao MySQL para venda, itens, pagamento e baixa de estoque
 - Valores financeiros armazenados com `DECIMAL`
 - Indices em nome de produto, codigo de barras e data da venda

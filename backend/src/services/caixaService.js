@@ -1,5 +1,6 @@
 import { pool } from '../config/database.js';
 import { registrarMovimentoEstoque } from './estoqueService.js';
+import { cancelarFinanceiroVenda } from './financeiroService.js';
 import { createHttpError } from '../utils/http.js';
 import {
   ensureNonNegativeDecimal,
@@ -515,6 +516,8 @@ export async function cancelarVenda(usuario, vendaId, dados) {
         [motivo, documentoFiscal.id]
       );
     }
+
+    await cancelarFinanceiroVenda(connection, usuario.empresaId, normalizedSaleId, motivo);
 
     await connection.commit();
 

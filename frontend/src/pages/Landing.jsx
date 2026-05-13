@@ -13,23 +13,23 @@ import { Link } from 'react-router-dom';
 const MODULES = [
   {
     icon: ShoppingCart,
-    title: 'Caixa',
-    description: 'Leitura de produto, carrinho, pagamento e finalização da venda.',
+    title: 'Frente de caixa',
+    description: 'Leitura de produtos, carrinho, pagamento e fechamento da venda no mesmo fluxo.',
   },
   {
     icon: Package,
     title: 'Produtos',
-    description: 'Cadastro simples com preço, código de barras e estoque mínimo.',
+    description: 'Cadastro com preço, código de barras, estoque, custo e base fiscal do item.',
   },
   {
     icon: Boxes,
     title: 'Estoque',
-    description: 'Consulta rápida de saldo, itens baixos e ruptura de produto.',
+    description: 'Consulta de saldo, itens críticos, ajustes e inventário da loja.',
   },
   {
     icon: ClipboardList,
     title: 'Relatórios',
-    description: 'Resumo do dia, vendas por período e conferência do movimento.',
+    description: 'Resumo diário, vendas por período e leitura clara do movimento.',
   },
 ];
 
@@ -37,7 +37,7 @@ const FLOW = [
   'Buscar o produto por nome ou código de barras.',
   'Adicionar ao carrinho e conferir o total da venda.',
   'Finalizar com a forma de pagamento informada.',
-  'Acompanhar estoque e vendas no mesmo sistema.',
+  'Acompanhar estoque, financeiro e vendas no mesmo sistema.',
 ];
 
 export default function Landing() {
@@ -54,7 +54,7 @@ export default function Landing() {
           </div>
 
           <div className="landing-topbar-actions">
-            <span className="landing-chip">Sistema para mercado local</span>
+            <span className="landing-chip">Operação local para mercado</span>
             <Link to="/login" className="btn primary">
               Entrar
             </Link>
@@ -63,12 +63,12 @@ export default function Landing() {
 
         <section className="landing-hero">
           <div className="landing-copy">
-            <span className="overview-label">Apresentação do sistema</span>
-            <h1>Frente de caixa, produtos e estoque no mesmo lugar.</h1>
+            <span className="overview-label">Sistema para operação de loja</span>
+            <h1>Caixa, estoque e retaguarda com leitura clara e fluxo direto.</h1>
             <p>
-              O DM PDV foi pensado para a rotina real de um mercado pequeno: cadastrar
-              produto, vender, baixar estoque e consultar o movimento do dia sem telas
-              confusas.
+              O DM PDV foi desenhado para a rotina real de um mercado pequeno:
+              cadastrar produto, vender, baixar estoque, receber mercadoria e
+              acompanhar o movimento do dia sem navegação confusa.
             </p>
 
             <div className="landing-actions">
@@ -84,14 +84,15 @@ export default function Landing() {
 
           <div className="landing-showcase">
             <div className="landing-card landing-card-strong">
-              <span className="landing-card-label">O que resolve hoje</span>
-              <strong>Venda, cadastro e estoque com fluxo direto.</strong>
+              <span className="landing-card-label">Visão da operação</span>
+              <strong>Venda, cadastro, reposição e consulta no mesmo ambiente.</strong>
+
               <div className="landing-card-grid">
                 <div className="landing-mini-stat">
                   <ReceiptText size={18} />
                   <div>
-                    <span>Venda no caixa</span>
-                    <strong>Carrinho, total e fechamento</strong>
+                    <span>Atendimento no caixa</span>
+                    <strong>Leitura, conferência e fechamento</strong>
                   </div>
                 </div>
 
@@ -106,12 +107,14 @@ export default function Landing() {
             </div>
 
             <div className="landing-card">
-              <span className="landing-card-label">Ambiente local</span>
-              <strong>Acesso inicial</strong>
+              <span className="landing-card-label">Acesso local</span>
+              <strong>Credenciais de início</strong>
+
               <div className="landing-credential">
                 <span>E-mail</span>
                 <strong>admin@dmsistemas.com</strong>
               </div>
+
               <div className="landing-credential">
                 <span>Senha</span>
                 <strong>123456</strong>
@@ -123,7 +126,7 @@ export default function Landing() {
         <section className="landing-section" id="modulos">
           <div className="landing-section-head">
             <h2>Módulos principais</h2>
-            <p>O sistema foi organizado para o operador chegar rápido no que mais usa.</p>
+            <p>O sistema foi organizado para o operador chegar rápido ao que usa todo dia.</p>
           </div>
 
           <div className="landing-module-grid">

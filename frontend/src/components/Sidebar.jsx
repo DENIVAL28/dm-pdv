@@ -6,6 +6,7 @@ import {
   ClipboardList,
   ContactRound,
   FileText,
+  Landmark,
   LayoutDashboard,
   Package,
   ShoppingCart,
@@ -18,13 +19,14 @@ import { getSessionUser } from '../services/session.js';
 const links = [
   { to: '/app', label: 'Painel', icon: LayoutDashboard },
   { to: '/app/caixa', label: 'Caixa', icon: Wallet },
-  { to: '/app/pdv', label: 'PDV', icon: ShoppingCart },
+  { to: '/app/pdv', label: 'Frente de caixa', icon: ShoppingCart },
   { to: '/app/produtos', label: 'Produtos', icon: Package },
   { to: '/app/fornecedores', label: 'Fornecedores', icon: Truck },
   { to: '/app/compras', label: 'Compras', icon: ClipboardList },
   { to: '/app/clientes', label: 'Clientes', icon: ContactRound },
   { to: '/app/estoque', label: 'Estoque', icon: Boxes },
   { to: '/app/fiscal', label: 'Fiscal', icon: FileText },
+  { to: '/app/financeiro', label: 'Financeiro', icon: Landmark },
   { to: '/app/relatorios', label: 'Relatorios', icon: ChartNoAxesCombined },
 ];
 
@@ -37,7 +39,7 @@ export default function Sidebar({ isOpen, onClose }) {
         <div className="brand brand-column">
           <div className="brand">
             <div className="brand-mark">DM</div>
-            <div>
+            <div className="brand-copy">
               <strong>DM PDV</strong>
               <span>{usuario?.empresa?.nome || 'DM Sistemas'}</span>
             </div>
@@ -58,13 +60,14 @@ export default function Sidebar({ isOpen, onClose }) {
 
       <nav className="nav-menu">
         <span className="nav-section-title">Modulos</span>
+
         {links.map((link) => {
           const Icon = link.icon;
 
           return (
-            <NavLink key={link.to} to={link.to} end={link.to === '/app'}>
+            <NavLink key={link.to} to={link.to} end={link.to === '/app'} title={link.label}>
               <Icon size={18} />
-              <span>{link.label}</span>
+              <span className="nav-link-label">{link.label}</span>
             </NavLink>
           );
         })}
@@ -76,7 +79,7 @@ export default function Sidebar({ isOpen, onClose }) {
         <small>{usuario?.email || ''}</small>
         <div className="sidebar-footer-note">
           <span>Ambiente</span>
-          <strong>Local</strong>
+          <strong>Loja local</strong>
         </div>
       </div>
     </aside>

@@ -66,11 +66,79 @@ CREATE TABLE IF NOT EXISTS clientes (
   nome VARCHAR(180) NOT NULL,
   documento VARCHAR(20) NULL,
   telefone VARCHAR(30) NULL,
+  email VARCHAR(160) NULL,
+  data_nascimento DATE NULL,
+  observacoes VARCHAR(255) NULL,
+  ativo TINYINT(1) NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (empresa_id) REFERENCES empresas(id),
   INDEX idx_clientes_empresa_nome (empresa_id, nome),
-  INDEX idx_clientes_empresa_documento (empresa_id, documento)
+  INDEX idx_clientes_empresa_documento (empresa_id, documento),
+  INDEX idx_clientes_empresa_telefone (empresa_id, telefone)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS cliente_enderecos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  cliente_id INT NOT NULL,
+  titulo VARCHAR(60) NULL,
+  cep VARCHAR(12) NULL,
+  logradouro VARCHAR(160) NOT NULL,
+  numero VARCHAR(20) NULL,
+  complemento VARCHAR(80) NULL,
+  bairro VARCHAR(80) NOT NULL,
+  cidade VARCHAR(80) NOT NULL,
+  estado CHAR(2) NOT NULL,
+  principal TINYINT(1) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  INDEX idx_cliente_enderecos_cliente (cliente_id),
+  INDEX idx_cliente_enderecos_principal (cliente_id, principal)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS cliente_contatos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  cliente_id INT NOT NULL,
+  nome VARCHAR(120) NOT NULL,
+  funcao VARCHAR(80) NULL,
+  telefone VARCHAR(30) NULL,
+  whatsapp VARCHAR(30) NULL,
+  email VARCHAR(160) NULL,
+  observacoes VARCHAR(255) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  INDEX idx_cliente_contatos_cliente (cliente_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS cliente_creditos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  cliente_id INT NOT NULL,
+  limite_credito DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  dias_vencimento INT NOT NULL DEFAULT 30,
+  ativo TINYINT(1) NOT NULL DEFAULT 0,
+  observacoes VARCHAR(255) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  UNIQUE KEY uk_cliente_creditos_cliente (cliente_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS cliente_historico (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  cliente_id INT NOT NULL,
+  usuario_id INT NULL,
+  tipo_evento VARCHAR(40) NOT NULL,
+  referencia_tipo VARCHAR(40) NULL,
+  referencia_id INT NULL,
+  descricao VARCHAR(255) NOT NULL,
+  valor_referencia DECIMAL(12,2) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+  INDEX idx_cliente_historico_cliente_data (cliente_id, created_at),
+  INDEX idx_cliente_historico_tipo (cliente_id, tipo_evento)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS fornecedores (
@@ -269,6 +337,22 @@ CREATE TABLE IF NOT EXISTS caixas (
   INDEX idx_caixas_empresa_status (empresa_id, status)
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS formas_pagamento_empresa (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  empresa_id INT NOT NULL,
+  codigo VARCHAR(40) NOT NULL,
+  nome VARCHAR(80) NOT NULL,
+  tipo_recebimento VARCHAR(20) NOT NULL DEFAULT 'caixa',
+  prazo_dias INT NOT NULL DEFAULT 0,
+  taxa_percentual DECIMAL(7,2) NOT NULL DEFAULT 0.00,
+  ativo TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (empresa_id) REFERENCES empresas(id),
+  UNIQUE KEY uk_formas_pagamento_empresa_codigo (empresa_id, codigo),
+  INDEX idx_formas_pagamento_empresa_tipo (empresa_id, tipo_recebimento, ativo)
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS caixa_sessoes (
   id INT AUTO_INCREMENT PRIMARY KEY,
   empresa_id INT NOT NULL,
@@ -366,6 +450,95 @@ CREATE TABLE IF NOT EXISTS venda_pagamentos (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (venda_id) REFERENCES vendas(id) ON DELETE CASCADE,
   INDEX idx_venda_pagamentos_venda (venda_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS contas_receber (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  empresa_id INT NOT NULL,
+  cliente_id INT NULL,
+  venda_id INT NULL,
+  venda_pagamento_id INT NULL,
+  forma_pagamento VARCHAR(40) NOT NULL,
+  valor DECIMAL(12,2) NOT NULL,
+  vencimento DATE NOT NULL,
+  data_recebimento TIMESTAMP NULL DEFAULT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pendente',
+  observacoes VARCHAR(255) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (empresa_id) REFERENCES empresas(id),
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id),
+  FOREIGN KEY (venda_id) REFERENCES vendas(id) ON DELETE SET NULL,
+  FOREIGN KEY (venda_pagamento_id) REFERENCES venda_pagamentos(id) ON DELETE SET NULL,
+  UNIQUE KEY uk_contas_receber_venda_pagamento (venda_pagamento_id),
+  INDEX idx_contas_receber_empresa_status (empresa_id, status, vencimento),
+  INDEX idx_contas_receber_empresa_venda (empresa_id, venda_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS contas_pagar (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  empresa_id INT NOT NULL,
+  fornecedor_id INT NOT NULL,
+  entrada_mercadoria_id INT NULL,
+  valor DECIMAL(12,2) NOT NULL,
+  vencimento DATE NOT NULL,
+  data_pagamento TIMESTAMP NULL DEFAULT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pendente',
+  observacoes VARCHAR(255) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (empresa_id) REFERENCES empresas(id),
+  FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id),
+  FOREIGN KEY (entrada_mercadoria_id) REFERENCES entradas_mercadoria(id) ON DELETE SET NULL,
+  UNIQUE KEY uk_contas_pagar_entrada (entrada_mercadoria_id),
+  INDEX idx_contas_pagar_empresa_status (empresa_id, status, vencimento)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS lancamentos_financeiros (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  empresa_id INT NOT NULL,
+  tipo VARCHAR(20) NOT NULL,
+  categoria VARCHAR(40) NOT NULL,
+  origem VARCHAR(40) NOT NULL,
+  origem_id INT NULL,
+  cliente_id INT NULL,
+  fornecedor_id INT NULL,
+  descricao VARCHAR(255) NOT NULL,
+  valor DECIMAL(12,2) NOT NULL,
+  vencimento DATE NOT NULL,
+  data_liquidacao TIMESTAMP NULL DEFAULT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pendente',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (empresa_id) REFERENCES empresas(id),
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id),
+  FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id),
+  INDEX idx_lancamentos_financeiros_empresa_status (empresa_id, status, vencimento),
+  INDEX idx_lancamentos_financeiros_origem (origem, origem_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS conciliacoes_cartao (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  empresa_id INT NOT NULL,
+  conta_receber_id INT NOT NULL,
+  venda_pagamento_id INT NOT NULL,
+  forma_pagamento VARCHAR(40) NOT NULL,
+  bandeira VARCHAR(40) NULL,
+  taxa_percentual DECIMAL(7,2) NOT NULL DEFAULT 0.00,
+  valor_bruto DECIMAL(12,2) NOT NULL,
+  valor_taxa DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  valor_liquido DECIMAL(12,2) NOT NULL,
+  data_prevista DATE NOT NULL,
+  data_conciliacao TIMESTAMP NULL DEFAULT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pendente',
+  observacoes VARCHAR(255) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (empresa_id) REFERENCES empresas(id),
+  FOREIGN KEY (conta_receber_id) REFERENCES contas_receber(id) ON DELETE CASCADE,
+  FOREIGN KEY (venda_pagamento_id) REFERENCES venda_pagamentos(id) ON DELETE CASCADE,
+  UNIQUE KEY uk_conciliacoes_cartao_pagamento (venda_pagamento_id),
+  INDEX idx_conciliacoes_cartao_empresa_status (empresa_id, status, data_prevista)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS venda_cancelamentos (

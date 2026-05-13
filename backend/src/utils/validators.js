@@ -97,6 +97,27 @@ export function ensureDateString(value, fieldName) {
   return value;
 }
 
+export function normalizeOptionalDateString(value, fieldName) {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    return null;
+  }
+
+  return ensureDateString(value, fieldName);
+}
+
+export function normalizeBooleanFlag(value, defaultValue = false) {
+  if (value === undefined || value === null || value === '') {
+    return defaultValue;
+  }
+
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  const normalized = String(value).trim().toLowerCase();
+  return ['1', 'true', 'sim', 'yes', 'on'].includes(normalized);
+}
+
 export function ensureDateRange(startDate, endDate) {
   const today = new Date();
   const defaultEnd = toDateInputValue(today);

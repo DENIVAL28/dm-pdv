@@ -1,5 +1,6 @@
 import { pool } from '../config/database.js';
 import { registrarMovimentoEstoque } from './estoqueService.js';
+import { registrarFinanceiroEntrada } from './financeiroService.js';
 import { createHttpError } from '../utils/http.js';
 import {
   ensureDateString,
@@ -287,7 +288,7 @@ export async function registrarEntrada(usuario, dados) {
     await connection.beginTransaction();
 
     await ensureSupplier(connection, usuario.empresaId, fornecedorId);
-    await loadProductsMap(connection, usuario.empresaId, items);
+    const productsMap = await loadProductsMap(connection, usuario.empresaId, items);
     const totals = calculateTotals(items);
 
     if (pedidoCompraId) {
@@ -398,6 +399,17 @@ export async function registrarEntrada(usuario, dados) {
         [pedidoCompraId]
       );
     }
+
+    await registrarFinanceiroEntrada(connection, usuario, {
+      fornecedor_id: fornecedorId,
+      entrada_mercadoria_id: result.insertId,
+      valor: totals.total,
+      data_entrada: new Date(),
+      observacoes,
+      descricao: numeroDocumento
+        ? `Conta gerada pela entrada ${numeroDocumento}`
+        : `Conta gerada pela entrada #${result.insertId}`,
+    });
 
     await connection.commit();
 

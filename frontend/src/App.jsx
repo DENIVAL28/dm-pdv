@@ -7,6 +7,7 @@ import Compras from './pages/Compras.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Estoque from './pages/Estoque.jsx';
 import Fiscal from './pages/Fiscal.jsx';
+import Financeiro from './pages/Financeiro.jsx';
 import Fornecedores from './pages/Fornecedores.jsx';
 import Landing from './pages/Landing.jsx';
 import Login from './pages/Login.jsx';
@@ -60,6 +61,7 @@ export default function App() {
           <Route path="clientes" element={<Clientes />} />
           <Route path="estoque" element={<Estoque />} />
           <Route path="fiscal" element={<Fiscal />} />
+          <Route path="financeiro" element={<Financeiro />} />
           <Route path="relatorios" element={<Relatorios />} />
         </Route>
         <Route path="*" element={<Navigate to={isAuthenticated() ? '/app' : '/'} replace />} />
