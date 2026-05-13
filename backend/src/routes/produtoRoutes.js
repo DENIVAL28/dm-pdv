@@ -7,6 +7,7 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get('/', produtoController.listar);
+router.get('/sugestao-compra', produtoController.sugestaoCompra);
 router.post('/', produtoController.criar);
 router.put('/:id', produtoController.atualizar);
 router.delete('/:id', produtoController.remover);

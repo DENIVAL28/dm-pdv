@@ -18,10 +18,11 @@ import EmptyState from '../components/EmptyState.jsx';
 import FeedbackBanner from '../components/FeedbackBanner.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
 import { PAYMENT_METHODS } from '../constants/paymentMethods.js';
+import { getCurrentCashSession } from '../services/cashRegisterService.js';
 import { listCustomers } from '../services/customerService.js';
 import { listProducts } from '../services/productService.js';
 import { finalizeSale } from '../services/salesService.js';
-import { formatCurrency, formatPaymentMethod, getStockStatus } from '../utils/formatters.js';
+import { formatCurrency, formatDateTime, formatPaymentMethod, getStockStatus } from '../utils/formatters.js';
 import { buildSaleDraft } from '../utils/saleDraft.js';
 
 const SCAN_SEQUENCE_GAP_MS = 60;
@@ -101,6 +102,7 @@ export default function PDV() {
   const [ultimaVenda, setUltimaVenda] = useState(null);
   const [ultimaLeitura, setUltimaLeitura] = useState(null);
   const [leitorAtivo, setLeitorAtivo] = useState(true);
+  const [sessaoCaixa, setSessaoCaixa] = useState(null);
   const inputRef = useRef(null);
   const scanBufferRef = useRef('');
   const scanLastKeyAtRef = useRef(0);
@@ -109,9 +111,14 @@ export default function PDV() {
   async function carregarDadosBase() {
     try {
       setLoading(true);
-      const [produtosData, clientesData] = await Promise.all([listProducts(), listCustomers()]);
+      const [produtosData, clientesData, sessaoData] = await Promise.all([
+        listProducts(),
+        listCustomers(),
+        getCurrentCashSession(),
+      ]);
       setProdutos(produtosData);
       setClientes(clientesData);
+      setSessaoCaixa(sessaoData);
     } catch (error) {
       setFeedback({ tone: 'error', message: error.message });
     } finally {
@@ -176,7 +183,7 @@ export default function PDV() {
     if (reservado >= produto.estoque) {
       setFeedback({
         tone: 'error',
-        message: `Nao ha mais saldo disponivel para ${produto.nome}.`,
+        message: `Não há mais saldo disponível para ${produto.nome}.`,
       });
       return false;
     }
@@ -214,7 +221,7 @@ export default function PDV() {
     if (quantidadeNumerica > produto.estoque) {
       setFeedback({
         tone: 'error',
-        message: `Quantidade acima do saldo disponivel para ${produto.nome}.`,
+        message: `Quantidade acima do saldo disponível para ${produto.nome}.`,
       });
 
       setCarrinho((atual) =>
@@ -330,7 +337,7 @@ export default function PDV() {
         codigo: produtoEncontrado.codigo_barras || null,
         mensagem: adicionou
           ? `Produto ${produtoEncontrado.nome} adicionado ao carrinho.`
-          : `Nao foi possivel adicionar ${produtoEncontrado.nome}.`,
+          : `Não foi possível adicionar ${produtoEncontrado.nome}.`,
         horario: new Date().toISOString(),
       });
     } catch (error) {
@@ -347,13 +354,21 @@ export default function PDV() {
   }
 
   async function concluirVenda() {
+    if (!sessaoCaixa?.sessao?.id) {
+      setFeedback({
+        tone: 'error',
+        message: 'Abra o caixa operacional antes de finalizar vendas no PDV.',
+      });
+      return;
+    }
+
     if (!carrinho.length) {
       setFeedback({ tone: 'error', message: 'Adicione itens ao carrinho para concluir a venda.' });
       return;
     }
 
     if (draft.desconto > draft.subtotal) {
-      setFeedback({ tone: 'error', message: 'O desconto nao pode ser maior que o subtotal.' });
+      setFeedback({ tone: 'error', message: 'O desconto não pode ser maior que o subtotal.' });
       return;
     }
 
@@ -499,7 +514,7 @@ export default function PDV() {
       <div className="page-header">
         <div className="page-title">
           <h2>Caixa</h2>
-          <p>Busque, confira pagamento e finalize a venda com a mesma clareza de um frente de caixa maduro.</p>
+          <p>Leitura rápida, conferência do pagamento e fechamento no mesmo fluxo.</p>
         </div>
 
         <div className="inline-actions">
@@ -510,7 +525,7 @@ export default function PDV() {
           <Button type="button" variant="secondary" onClick={carregarDadosBase}>
             Atualizar dados
           </Button>
-          <Button type="button" variant="ghost" onClick={() => navigate('/clientes')}>
+          <Button type="button" variant="ghost" onClick={() => navigate('/app/clientes')}>
             <UserRoundPlus size={16} />
             Clientes
           </Button>
@@ -519,9 +534,43 @@ export default function PDV() {
 
       {feedback ? <FeedbackBanner tone={feedback.tone}>{feedback.message}</FeedbackBanner> : null}
 
+      {!sessaoCaixa ? (
+        <section className="panel panel-inline-callout">
+          <div className="panel-header">
+            <div className="panel-title">
+              <h3>Caixa ainda nao aberto</h3>
+              <p>O PDV pode consultar produtos, mas a venda so fecha com uma sessao de caixa ativa.</p>
+            </div>
+
+            <Button type="button" onClick={() => navigate('/app/caixa')}>
+              Abrir caixa
+            </Button>
+          </div>
+        </section>
+      ) : (
+        <div className="cash-session-strip">
+          <div className="helper-card cash-session-strip-card">
+            <span>Caixa em uso</span>
+            <strong>
+              {sessaoCaixa.sessao.caixa_nome}
+              {sessaoCaixa.sessao.caixa_identificador
+                ? ` (${sessaoCaixa.sessao.caixa_identificador})`
+                : ''}
+            </strong>
+            <small>Aberto em {formatDateTime(sessaoCaixa.sessao.data_abertura)}</small>
+          </div>
+
+          <div className="helper-card cash-session-strip-card">
+            <span>Dinheiro esperado</span>
+            <strong>{formatCurrency(sessaoCaixa.valor_em_caixa_sistema || 0)}</strong>
+            <small>Resumo do caixa operacional atual.</small>
+          </div>
+        </div>
+      )}
+
       {ultimaVenda ? (
         <FeedbackBanner tone="success">
-          Venda #{ultimaVenda.id} concluida em {formatCurrency(ultimaVenda.total)} com{' '}
+          Venda #{ultimaVenda.id} concluída em {formatCurrency(ultimaVenda.total)} com{' '}
           {formatPaymentMethod(ultimaVenda.forma_pagamento)} para{' '}
           {ultimaVenda.cliente_nome || 'Consumidor final'}
           {ultimaVenda.troco ? ` e troco de ${formatCurrency(ultimaVenda.troco)}` : ''}.
@@ -536,7 +585,7 @@ export default function PDV() {
           value={formatCurrency(draft.total)}
           helper={
             draft.desconto || draft.acrescimo
-              ? `Desc. ${formatCurrency(draft.desconto)} | Acresc. ${formatCurrency(draft.acrescimo)}`
+              ? `Desc. ${formatCurrency(draft.desconto)} | Acrésc. ${formatCurrency(draft.acrescimo)}`
               : 'Sem ajuste manual nesta venda'
           }
           icon={BadgeDollarSign}
@@ -554,7 +603,7 @@ export default function PDV() {
               ? draft.temValorRecebidoInformado
                 ? `Recebido ${formatCurrency(draft.valorRecebido)}`
                 : 'Sem valor recebido informado'
-              : 'Liquidacao integral sem troco'
+              : 'Liquidação integral sem troco'
           }
           icon={Wallet}
         />
@@ -565,7 +614,7 @@ export default function PDV() {
           <div className="panel-header">
             <div className="panel-title">
               <h3>Leitura e busca de produtos</h3>
-              <p>Codigo exato tem prioridade. O sistema aceita leitor com Enter e atalhos do caixa.</p>
+              <p>Código exato tem prioridade. O sistema aceita leitor com Enter e atalhos do caixa.</p>
             </div>
           </div>
 
@@ -574,7 +623,7 @@ export default function PDV() {
             <input
               ref={inputRef}
               autoFocus
-              placeholder="Passe o codigo de barras ou digite o nome"
+              placeholder="Passe o código de barras ou digite o nome"
               value={busca}
               onChange={(event) => setBusca(event.target.value)}
               onKeyDown={handleBuscaKeyDown}
@@ -598,13 +647,13 @@ export default function PDV() {
           </div>
 
           <div className={`scan-feedback-card ${ultimaLeitura?.status === 'error' ? 'error' : ''}`}>
-            <span>Ultima leitura</span>
+            <span>Última leitura</span>
             <strong>
-              {ultimaLeitura?.produto || ultimaLeitura?.mensagem || 'Aguardando leitura de codigo de barras'}
+              {ultimaLeitura?.produto || ultimaLeitura?.mensagem || 'Aguardando leitura de código de barras'}
             </strong>
             <small>
               {ultimaLeitura?.codigo
-                ? `Codigo ${ultimaLeitura.codigo}`
+                ? `Código ${ultimaLeitura.codigo}`
                 : ultimaLeitura?.termo
                   ? `Entrada ${ultimaLeitura.termo}`
                   : 'Use o leitor ou pressione F2 para focar o campo de leitura.'}
@@ -622,17 +671,17 @@ export default function PDV() {
               <strong>{formatPaymentMethod(formaPagamento)}</strong>
             </div>
 
-              <div className="spotlight-card">
-                <span>Resultados exibidos</span>
-                <strong>{resultados.length}</strong>
-              </div>
-
-              <div className="spotlight-card">
-                <span>Leitura</span>
-                <strong>{leitorAtivo ? 'Pronta para scanner' : 'Use F2 para retomar'}</strong>
-              </div>
+            <div className="spotlight-card">
+              <span>Resultados exibidos</span>
+              <strong>{resultados.length}</strong>
             </div>
 
+            <div className="spotlight-card">
+              <span>Leitura</span>
+              <strong>{leitorAtivo ? 'Pronta para scanner' : 'Use F2 para retomar'}</strong>
+            </div>
+          </div>
+          
           {loading ? (
             <div className="loading-state">Carregando produtos...</div>
           ) : resultados.length ? (
@@ -656,8 +705,8 @@ export default function PDV() {
                     </div>
 
                     <div className="product-card-meta">
-                      <span>Codigo: {produto.codigo_barras || '-'}</span>
-                      <span>Disponivel: {disponivel}</span>
+                      <span>Código: {produto.codigo_barras || '-'}</span>
+                      <span>Disponível: {disponivel}</span>
                     </div>
 
                     <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
@@ -676,8 +725,8 @@ export default function PDV() {
         <section className="panel cart-panel cart-panel-strong">
           <div className="panel-header">
             <div className="panel-title">
-              <h3>Conferencia da venda</h3>
-              <p>Itens, pagamento e totalizacao no mesmo painel.</p>
+              <h3>Conferência da venda</h3>
+              <p>Itens, pagamento e totalização no mesmo painel.</p>
             </div>
 
             <Button
@@ -776,7 +825,7 @@ export default function PDV() {
             </label>
 
             <label className="field">
-              <span>Acrescimo</span>
+              <span>Acréscimo</span>
               <input
                 type="number"
                 min="0"
@@ -789,12 +838,12 @@ export default function PDV() {
           </div>
 
           <div className="helper-card">
-            <span>Identificacao da venda</span>
+            <span>Identificação da venda</span>
             <strong>{clienteSelecionado?.nome || 'Consumidor final'}</strong>
             <small>
               {clienteSelecionado
                 ? clienteSelecionado.documento || clienteSelecionado.telefone || 'Cliente sem documento cadastrado.'
-                : 'A venda pode seguir sem cliente vinculado quando o caixa nao precisar identificar o comprador.'}
+                : 'A venda pode seguir sem cliente vinculado quando o caixa não precisar identificar o comprador.'}
             </small>
           </div>
 
@@ -829,19 +878,19 @@ export default function PDV() {
             </label>
           ) : (
             <div className="helper-card">
-              <span>Liquidacao</span>
+              <span>Liquidação</span>
               <strong>{formatPaymentMethod(formaPagamento)}</strong>
-              <small>Pix e cartoes consideram a venda liquidada sem calculo de troco.</small>
+              <small>Pix e cartões consideram a venda liquidada sem cálculo de troco.</small>
             </div>
           )}
 
           <label className="field">
-            <span>Observacoes</span>
+            <span>Observações</span>
             <textarea
               rows="2"
               value={observacoes}
               onChange={(event) => setObservacoes(event.target.value)}
-              placeholder="Campo opcional para observacoes internas da venda"
+              placeholder="Campo opcional para observações internas da venda"
             />
           </label>
 
@@ -863,7 +912,7 @@ export default function PDV() {
             </div>
 
             <div className="sale-breakdown-row">
-              <span>Acrescimo aplicado</span>
+              <span>Acréscimo aplicado</span>
               <strong>{formatCurrency(draft.acrescimo)}</strong>
             </div>
 
@@ -895,7 +944,13 @@ export default function PDV() {
             type="button"
             className="full"
             onClick={concluirVenda}
-            disabled={!carrinho.length || finalizando || draft.total <= 0 || draft.valorFaltante > 0}
+            disabled={
+              !sessaoCaixa?.sessao?.id ||
+              !carrinho.length ||
+              finalizando ||
+              draft.total <= 0 ||
+              draft.valorFaltante > 0
+            }
           >
             <ShoppingCart size={16} />
             {finalizando ? 'Finalizando...' : 'Finalizar venda'}

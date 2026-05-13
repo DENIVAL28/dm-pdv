@@ -122,7 +122,7 @@ export default function Clientes() {
       <div className="page-header">
         <div className="page-title">
           <h2>Clientes</h2>
-          <p>Cadastre contatos que podem ser vinculados a venda sem atrasar o caixa.</p>
+          <p>Cadastre contatos que podem ser vinculados à venda sem atrasar o caixa.</p>
         </div>
 
         <Button type="button" onClick={abrirNovoCliente}>
@@ -177,7 +177,7 @@ export default function Clientes() {
                   <th>Documento</th>
                   <th>Telefone</th>
                   <th>Cadastro</th>
-                  <th>Acoes</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -210,7 +210,7 @@ export default function Clientes() {
         ) : (
           <EmptyState
             title="Nenhum cliente encontrado"
-            description="Cadastre clientes para deixar a identificacao das vendas pronta quando precisar."
+            description="Cadastre clientes para deixar a identificação das vendas pronta quando precisar."
           />
         )}
       </section>

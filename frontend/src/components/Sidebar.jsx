@@ -3,21 +3,29 @@ import { NavLink } from 'react-router-dom';
 import {
   Boxes,
   ChartNoAxesCombined,
+  ClipboardList,
   ContactRound,
+  FileText,
   LayoutDashboard,
   Package,
   ShoppingCart,
+  Truck,
+  Wallet,
   X,
 } from 'lucide-react';
 import { getSessionUser } from '../services/session.js';
 
 const links = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/pdv', label: 'PDV', icon: ShoppingCart },
-  { to: '/produtos', label: 'Produtos', icon: Package },
-  { to: '/clientes', label: 'Clientes', icon: ContactRound },
-  { to: '/estoque', label: 'Estoque', icon: Boxes },
-  { to: '/relatorios', label: 'Relatorios', icon: ChartNoAxesCombined },
+  { to: '/app', label: 'Painel', icon: LayoutDashboard },
+  { to: '/app/caixa', label: 'Caixa', icon: Wallet },
+  { to: '/app/pdv', label: 'PDV', icon: ShoppingCart },
+  { to: '/app/produtos', label: 'Produtos', icon: Package },
+  { to: '/app/fornecedores', label: 'Fornecedores', icon: Truck },
+  { to: '/app/compras', label: 'Compras', icon: ClipboardList },
+  { to: '/app/clientes', label: 'Clientes', icon: ContactRound },
+  { to: '/app/estoque', label: 'Estoque', icon: Boxes },
+  { to: '/app/fiscal', label: 'Fiscal', icon: FileText },
+  { to: '/app/relatorios', label: 'Relatorios', icon: ChartNoAxesCombined },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -38,7 +46,12 @@ export default function Sidebar({ isOpen, onClose }) {
           <span className="sidebar-chip">Operacao local</span>
         </div>
 
-        <button type="button" className="icon-btn mobile-only" onClick={onClose} aria-label="Fechar menu">
+        <button
+          type="button"
+          className="icon-btn mobile-only"
+          onClick={onClose}
+          aria-label="Fechar menu"
+        >
           <X size={18} />
         </button>
       </div>
@@ -49,7 +62,7 @@ export default function Sidebar({ isOpen, onClose }) {
           const Icon = link.icon;
 
           return (
-            <NavLink key={link.to} to={link.to} end={link.to === '/'}>
+            <NavLink key={link.to} to={link.to} end={link.to === '/app'}>
               <Icon size={18} />
               <span>{link.label}</span>
             </NavLink>

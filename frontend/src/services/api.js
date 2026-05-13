@@ -14,10 +14,16 @@ async function request(path, options = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  let response;
+
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch {
+    throw new Error('Não foi possível conectar ao servidor local.');
+  }
 
   const payload = await response.json().catch(() => null);
 
@@ -26,7 +32,7 @@ async function request(path, options = {}) {
       clearSession();
     }
 
-    throw new Error(payload?.message || 'Nao foi possivel concluir a requisicao.');
+    throw new Error(payload?.message || 'Não foi possível concluir a requisição.');
   }
 
   return payload;

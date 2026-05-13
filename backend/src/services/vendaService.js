@@ -1,4 +1,7 @@
 import { pool } from '../config/database.js';
+import { obterSessaoAbertaDoUsuario } from './caixaService.js';
+import { registrarMovimentoEstoque } from './estoqueService.js';
+import { garantirDocumentoFiscalPendente } from './fiscalService.js';
 import { createHttpError } from '../utils/http.js';
 import {
   ensureEnum,
@@ -82,14 +85,19 @@ async function obterVendaPorId(connection, empresaId, vendaId) {
       v.valor_recebido,
       v.troco,
       v.forma_pagamento,
+      v.caixa_sessao_id,
       v.observacoes,
       v.created_at,
       u.nome AS usuario,
       c.nome AS cliente_nome,
-      c.documento AS cliente_documento
+      c.documento AS cliente_documento,
+      cx.nome AS caixa_nome,
+      cx.identificador AS caixa_identificador
      FROM vendas v
      INNER JOIN usuarios u ON u.id = v.usuario_id
      LEFT JOIN clientes c ON c.id = v.cliente_id
+     LEFT JOIN caixa_sessoes cs ON cs.id = v.caixa_sessao_id
+     LEFT JOIN caixas cx ON cx.id = cs.caixa_id
      WHERE v.empresa_id = ?
        AND v.id = ?
      LIMIT 1`,
@@ -147,6 +155,12 @@ export async function finalizarVenda(usuario, dados) {
 
   try {
     await connection.beginTransaction();
+
+    const sessaoCaixa = await obterSessaoAbertaDoUsuario(connection, usuario);
+
+    if (!sessaoCaixa) {
+      throw createHttpError(409, 'Abra o caixa antes de finalizar a venda.');
+    }
 
     let subtotal = 0;
     const itensCalculados = [];
@@ -220,6 +234,8 @@ export async function finalizarVenda(usuario, dados) {
         empresa_id,
         usuario_id,
         cliente_id,
+        caixa_id,
+        caixa_sessao_id,
         subtotal,
         desconto_valor,
         acrescimo_valor,
@@ -228,11 +244,13 @@ export async function finalizarVenda(usuario, dados) {
         troco,
         forma_pagamento,
         observacoes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         usuario.empresaId,
         usuario.id,
         clienteId,
+        sessaoCaixa.caixa_id,
+        sessaoCaixa.id,
         subtotal,
         descontoValor,
         acrescimoValor,
@@ -247,6 +265,10 @@ export async function finalizarVenda(usuario, dados) {
     const vendaId = vendaResult.insertId;
 
     for (const item of itensCalculados) {
+      const produtoAtual = productsById.get(item.produto_id);
+      const saldoAnterior = Number(produtoAtual.estoque);
+      const saldoPosterior = saldoAnterior - item.quantidade;
+
       await connection.query(
         `INSERT INTO venda_itens (venda_id, produto_id, quantidade, preco_unitario, subtotal)
          VALUES (?, ?, ?, ?, ?)`,
@@ -257,6 +279,19 @@ export async function finalizarVenda(usuario, dados) {
         'UPDATE produtos SET estoque = estoque - ? WHERE id = ?',
         [item.quantidade, item.produto_id]
       );
+
+      await registrarMovimentoEstoque(connection, {
+        empresa_id: usuario.empresaId,
+        produto_id: item.produto_id,
+        tipo: 'venda',
+        origem: 'venda',
+        origem_id: vendaId,
+        quantidade: -item.quantidade,
+        saldo_anterior: saldoAnterior,
+        saldo_posterior: saldoPosterior,
+        observacoes: `Saida pela venda #${vendaId}`,
+        usuario_id: usuario.id,
+      });
     }
 
     await connection.query(
@@ -264,6 +299,8 @@ export async function finalizarVenda(usuario, dados) {
        VALUES (?, ?, ?)`,
       [vendaId, formaPagamento, total]
     );
+
+    await garantirDocumentoFiscalPendente(connection, usuario, vendaId);
 
     await connection.commit();
 
@@ -291,13 +328,17 @@ export async function listar(empresaId, filtros = {}) {
       v.valor_recebido,
       v.troco,
       v.forma_pagamento,
+      v.caixa_sessao_id,
       v.created_at,
       u.nome AS usuario,
       c.nome AS cliente_nome,
+      cx.nome AS caixa_nome,
       COALESCE(SUM(vi.quantidade), 0) AS total_itens
      FROM vendas v
      INNER JOIN usuarios u ON u.id = v.usuario_id
      LEFT JOIN clientes c ON c.id = v.cliente_id
+     LEFT JOIN caixa_sessoes cs ON cs.id = v.caixa_sessao_id
+     LEFT JOIN caixas cx ON cx.id = cs.caixa_id
      LEFT JOIN venda_itens vi ON vi.venda_id = v.id
      WHERE v.empresa_id = ?
        AND v.status = 'finalizada'
@@ -311,9 +352,11 @@ export async function listar(empresaId, filtros = {}) {
       v.valor_recebido,
       v.troco,
       v.forma_pagamento,
+      v.caixa_sessao_id,
       v.created_at,
       u.nome,
-      c.nome
+      c.nome,
+      cx.nome
      ORDER BY v.created_at DESC
      LIMIT ?`,
     [empresaId, limite]

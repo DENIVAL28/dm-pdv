@@ -58,12 +58,12 @@ export default function Dashboard() {
     <div className="page-stack">
       <div className="page-header">
         <div className="page-title">
-          <h2>Visao do dia</h2>
-          <p>Vendas, giro e produtos que exigem reposicao imediata.</p>
+          <h2>Painel do dia</h2>
+          <p>Vendas, giro e produtos que exigem reposição imediata.</p>
         </div>
 
         <Button type="button" variant="secondary" onClick={carregarDashboard}>
-          Atualizar
+          Atualizar painel
         </Button>
       </div>
 
@@ -74,15 +74,15 @@ export default function Dashboard() {
           <span className="overview-label">Resumo operacional</span>
           <h3>Caixa, estoque e consulta de vendas no mesmo painel.</h3>
           <p>
-            Acompanhe o total vendido, veja itens que pedem reposicao e entre direto nos
+            Acompanhe o total vendido, veja itens que pedem reposição e entre direto nos
             fluxos mais usados do dia.
           </p>
 
           <div className="inline-actions">
-            <Button type="button" onClick={() => navigate('/pdv')}>
-              Ir para o PDV
+            <Button type="button" onClick={() => navigate('/app/pdv')}>
+              Abrir caixa
             </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate('/produtos')}>
+            <Button type="button" variant="secondary" onClick={() => navigate('/app/produtos')}>
               Abrir produtos
             </Button>
           </div>
@@ -98,11 +98,11 @@ export default function Dashboard() {
           <div className="overview-stat">
             <span>Faturamento</span>
             <strong>{formatCurrency(resumo.total_vendido_hoje)}</strong>
-            <small>Ticket medio de {formatCurrency(resumo.ticket_medio_hoje)}</small>
+            <small>Ticket médio de {formatCurrency(resumo.ticket_medio_hoje)}</small>
           </div>
 
           <div className="overview-stat">
-            <span>Itens criticos</span>
+            <span>Itens críticos</span>
             <strong>{resumo.estoque_baixo}</strong>
             <small>{resumo.sem_estoque} sem estoque</small>
           </div>
@@ -120,7 +120,7 @@ export default function Dashboard() {
         <Card
           title="Total vendido"
           value={formatCurrency(resumo.total_vendido_hoje)}
-          helper={`Ticket medio de ${formatCurrency(resumo.ticket_medio_hoje)}`}
+          helper={`Ticket médio de ${formatCurrency(resumo.ticket_medio_hoje)}`}
           icon={BadgeDollarSign}
           tone="primary"
         />
@@ -133,7 +133,7 @@ export default function Dashboard() {
         <Card
           title="Estoque baixo"
           value={resumo.estoque_baixo}
-          helper="Itens com saldo no minimo ou abaixo"
+          helper="Itens com saldo no mínimo ou abaixo"
           icon={AlertTriangle}
           tone="warning"
         />
@@ -143,8 +143,8 @@ export default function Dashboard() {
         <section className="panel panel-emphasis">
           <div className="panel-header">
             <div className="panel-title">
-              <h3>Ultimas vendas</h3>
-              <p>Movimentacoes mais recentes da operacao.</p>
+              <h3>Últimas vendas</h3>
+              <p>Movimentações mais recentes da operação.</p>
             </div>
           </div>
 
@@ -200,7 +200,7 @@ export default function Dashboard() {
           ) : (
             <EmptyState
               title="Nenhuma venda registrada hoje"
-              description="As novas vendas finalizadas aparecerao aqui."
+              description="As novas vendas finalizadas aparecem aqui."
             />
           )}
         </section>
@@ -208,13 +208,13 @@ export default function Dashboard() {
         <div className="side-stack">
           <section className="panel panel-muted">
             <div className="panel-title">
-              <h3>Indicadores rapidos</h3>
-              <p>Dois pontos de leitura para o caixa e reposicao.</p>
+              <h3>Indicadores rápidos</h3>
+              <p>Dois pontos de leitura para caixa e reposição.</p>
             </div>
 
             <div className="metric-grid">
               <div className="info-tile">
-                <span>Ticket medio</span>
+                <span>Ticket médio</span>
                 <strong>{formatCurrency(resumo.ticket_medio_hoje)}</strong>
               </div>
 
@@ -228,8 +228,8 @@ export default function Dashboard() {
           <section className="panel panel-muted">
             <div className="panel-header">
               <div className="panel-title">
-                <h3>Produtos com atencao</h3>
-                <p>Itens com reposicao pendente.</p>
+                <h3>Produtos com atenção</h3>
+                <p>Itens com reposição pendente.</p>
               </div>
             </div>
 
@@ -245,7 +245,7 @@ export default function Dashboard() {
                       <div>
                         <strong>{product.nome}</strong>
                         <p>
-                          Estoque atual: {product.estoque} | Minimo: {product.estoque_minimo}
+                          Estoque atual: {product.estoque} | Mínimo: {product.estoque_minimo}
                         </p>
                       </div>
 
@@ -259,8 +259,8 @@ export default function Dashboard() {
               </div>
             ) : (
               <EmptyState
-                title="Nenhum produto em nivel critico"
-                description="Os itens ativos estao acima do estoque minimo."
+                title="Nenhum produto em nível crítico"
+                description="Os itens ativos estão acima do estoque mínimo."
               />
             )}
           </section>

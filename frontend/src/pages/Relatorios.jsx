@@ -63,7 +63,7 @@ export default function Relatorios() {
     <div className="page-stack">
       <div className="page-header">
         <div className="page-title">
-          <h2>Relatorios de vendas</h2>
+          <h2>Relatórios de vendas</h2>
           <p>Filtre por data e acompanhe faturamento, itens vendidos e meios de pagamento.</p>
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function Relatorios() {
         <div className="panel-header">
           <div className="panel-title">
             <h3>Filtros</h3>
-            <p>Periodo de consulta para o resumo e a listagem de vendas.</p>
+            <p>Período de consulta para o resumo e a listagem de vendas.</p>
           </div>
         </div>
 
@@ -104,7 +104,7 @@ export default function Relatorios() {
       </section>
 
       <div className="stats-grid">
-        <Card title="Vendas no periodo" value={dados.resumo.quantidade_vendas} icon={ShoppingBag} />
+        <Card title="Vendas no período" value={dados.resumo.quantidade_vendas} icon={ShoppingBag} />
         <Card
           title="Total vendido"
           value={formatCurrency(dados.resumo.total_vendido)}
@@ -112,7 +112,7 @@ export default function Relatorios() {
           tone="primary"
         />
         <Card
-          title="Ticket medio"
+          title="Ticket médio"
           value={formatCurrency(dados.resumo.ticket_medio)}
           icon={CalendarRange}
         />
@@ -123,7 +123,7 @@ export default function Relatorios() {
         <section className="panel">
           <div className="panel-title">
             <h3>Vendas por dia</h3>
-            <p>Periodo de {formatDate(dados.periodo.data_inicial)} a {formatDate(dados.periodo.data_final)}.</p>
+            <p>Período de {formatDate(dados.periodo.data_inicial)} a {formatDate(dados.periodo.data_final)}.</p>
           </div>
 
           {loading ? (
@@ -145,8 +145,8 @@ export default function Relatorios() {
             </div>
           ) : (
             <EmptyState
-              title="Sem vendas no periodo"
-              description="Ajuste o intervalo de datas para consultar outro periodo."
+              title="Sem vendas no período"
+              description="Ajuste o intervalo de datas para consultar outro período."
             />
           )}
         </section>
@@ -154,7 +154,7 @@ export default function Relatorios() {
         <section className="panel">
           <div className="panel-title">
             <h3>Formas de pagamento</h3>
-            <p>Distribuicao do faturamento por metodo utilizado.</p>
+            <p>Distribuição do faturamento por método utilizado.</p>
           </div>
 
           {loading ? (
@@ -177,7 +177,7 @@ export default function Relatorios() {
           ) : (
             <EmptyState
               title="Sem pagamentos registrados"
-              description="As vendas filtradas aparecerao aqui por forma de pagamento."
+              description="As vendas filtradas aparecem aqui por forma de pagamento."
             />
           )}
         </section>
@@ -186,7 +186,7 @@ export default function Relatorios() {
       <section className="panel">
         <div className="panel-title">
           <h3>Vendas detalhadas</h3>
-          <p>Ultimas vendas encontradas no periodo filtrado.</p>
+          <p>Últimas vendas encontradas no período filtrado.</p>
         </div>
 
         {loading ? (
@@ -241,7 +241,7 @@ export default function Relatorios() {
         ) : (
           <EmptyState
             title="Nenhuma venda para mostrar"
-            description="Quando houver vendas no periodo selecionado, elas aparecerao nesta tabela."
+            description="Quando houver vendas no período selecionado, elas aparecem nesta tabela."
           />
         )}
       </section>

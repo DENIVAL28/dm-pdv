@@ -16,10 +16,24 @@ Sistema web para pequenos mercados com foco em operacao diaria de caixa, cadastr
 - Dashboard com vendas do dia, total vendido, produtos cadastrados e estoque baixo
 - Cadastro e edicao de produtos
 - Cadastro e edicao de clientes
+- Cadastro de fornecedores
+- Pedidos de compra
+- Entrada de mercadoria com aumento de estoque
+- Ajustes de estoque e perdas com motivo
+- Inventario com abertura, contagem e fechamento
+- Trilha auditavel de movimentacao de estoque
+- Abertura e fechamento de caixa com sangria e suprimento
+- Configuracao fiscal da empresa
+- Cadastro fiscal do produto para emissao
+- Documento fiscal pendente por venda
+- Emissao fiscal local com numeracao e chave
+- Cancelamento fiscal vinculado ao fluxo da venda
 - PDV com busca por nome ou codigo de barras
 - Selecao opcional de cliente no fechamento da venda
 - Desconto, acrescimo, valor recebido e troco no fechamento da venda
+- Venda vinculada a sessao de caixa aberta
 - Baixa de estoque no fechamento da venda
+- Cancelamento de venda com devolucao de estoque
 - Relatorios com filtro por data
 
 ## Estrutura preparada para evolucao
@@ -29,10 +43,26 @@ O schema atual ja deixa a base pronta para crescer com:
 - empresas
 - clientes
 - caixas
+- fornecedores
+- pedidos de compra
+- entradas de mercadoria
 - pagamentos
 - documentos fiscais
+- tributacao de produtos
 
 Nesta versao, somente o necessario para a operacao local foi colocado no fluxo principal.
+
+## Roadmap tecnico
+
+O plano de evolucao por fases esta em [docs/ROADMAP-TECNICO.md](./docs/ROADMAP-TECNICO.md).
+
+Esse documento organiza:
+
+- passo zero de base tecnica
+- fases de caixa, compras, estoque, fiscal e financeiro
+- fortalecimento de clientes
+- multiempresa real e permissoes
+- tabelas, telas e APIs previstas por etapa
 
 ## Como rodar
 
@@ -86,6 +116,27 @@ npm run dev
 
 O frontend consome `http://localhost:3333/api` por padrao.
 
+### 4. Automacao no Windows
+
+Se estiver no Windows, voce pode usar:
+
+```text
+scripts\setup-dev.bat
+scripts\start-dev.bat
+```
+
+Uso recomendado:
+
+1. Rode `scripts\setup-dev.bat` uma vez para preparar backend e frontend
+2. Configure o MySQL e importe `schema.sql` e `seed.sql`
+3. Rode `scripts\start-dev.bat` para abrir backend e frontend
+
+Se quiser mandar um atalho de clone para outra pessoa, use:
+
+```text
+scripts\clone-dm-pdv.bat
+```
+
 ## Login inicial
 
 - E-mail: `admin@dmsistemas.com`
@@ -110,16 +161,17 @@ Detalhes completos em [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Fluxo de venda implementado
 
-1. Buscar produto por nome ou codigo de barras
-2. Adicionar item ao carrinho
-3. Opcionalmente vincular um cliente a venda
-4. Ajustar quantidade, desconto, acrescimo e pagamento
-5. Calcular total, valor recebido e troco
-6. Finalizar venda com validacao de estoque no backend
-7. Gravar venda, itens e pagamento na mesma transacao
-8. Baixar estoque
-9. Retornar a venda finalizada para o frontend
-10. Limpar o carrinho e exibir confirmacao
+1. Abrir uma sessao de caixa
+2. Buscar produto por nome ou codigo de barras
+3. Adicionar item ao carrinho
+4. Opcionalmente vincular um cliente a venda
+5. Ajustar quantidade, desconto, acrescimo e pagamento
+6. Calcular total, valor recebido e troco
+7. Finalizar venda com validacao de estoque e caixa aberto no backend
+8. Gravar venda, itens e pagamento na mesma transacao
+9. Baixar estoque
+10. Retornar a venda finalizada para o frontend
+11. Limpar o carrinho e exibir confirmacao
 
 ## Endpoints principais
 
@@ -132,8 +184,42 @@ Detalhes completos em [CONTRIBUTING.md](./CONTRIBUTING.md).
 - `POST /api/clientes`
 - `PUT /api/clientes/:id`
 - `DELETE /api/clientes/:id`
+- `GET /api/fornecedores`
+- `POST /api/fornecedores`
+- `PUT /api/fornecedores/:id`
+- `DELETE /api/fornecedores/:id`
+- `GET /api/compras/pedidos`
+- `POST /api/compras/pedidos`
+- `POST /api/compras/pedidos/:id/finalizar`
+- `GET /api/compras/sugestao-compra`
+- `GET /api/entradas`
+- `POST /api/entradas`
+- `GET /api/caixas`
+- `GET /api/caixas/sessao-atual`
+- `POST /api/caixas/sessoes/abrir`
+- `POST /api/caixas/sessoes/:id/sangria`
+- `POST /api/caixas/sessoes/:id/suprimento`
+- `POST /api/caixas/sessoes/:id/fechar`
+- `GET /api/caixas/sessoes/:id/resumo`
+- `GET /api/estoque/movimentos`
+- `POST /api/estoque/ajustes`
+- `POST /api/estoque/perdas`
+- `GET /api/estoque/inventarios`
+- `GET /api/estoque/inventarios/atual`
+- `POST /api/estoque/inventarios`
+- `GET /api/estoque/inventarios/:id/itens`
+- `POST /api/estoque/inventarios/:id/itens/contagem`
+- `POST /api/estoque/inventarios/:id/finalizar`
+- `POST /api/estoque/inventarios/:id/cancelar`
+- `GET /api/fiscal/configuracao`
+- `PUT /api/fiscal/configuracao`
+- `GET /api/fiscal/documentos`
+- `GET /api/fiscal/documentos/:id`
+- `POST /api/fiscal/documentos/venda/:vendaId/emitir`
+- `POST /api/fiscal/documentos/:id/cancelar`
 - `POST /api/vendas`
 - `GET /api/vendas`
+- `POST /api/vendas/:id/cancelar`
 - `GET /api/relatorios/dashboard`
 - `GET /api/relatorios/vendas?data_inicial=AAAA-MM-DD&data_final=AAAA-MM-DD`
 
@@ -142,6 +228,10 @@ Detalhes completos em [CONTRIBUTING.md](./CONTRIBUTING.md).
 - Respostas da API padronizadas em `{ success, data }`
 - Tratamento de erros com mensagens claras
 - Venda com bloqueio de estoque insuficiente
+- Venda bloqueada sem caixa aberto
+- Entrada de mercadoria atualizando custo e estoque no mesmo fluxo
+- Movimentos de estoque gravados para venda, cancelamento, entrada, ajuste, perda e inventario
+- Cancelamento de venda bloqueado quando o documento fiscal estiver autorizado
 - Transacao MySQL para venda, itens, pagamento e baixa de estoque
 - Valores financeiros armazenados com `DECIMAL`
 - Indices em nome de produto, codigo de barras e data da venda

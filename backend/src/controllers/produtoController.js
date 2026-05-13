@@ -36,3 +36,12 @@ export async function remover(req, res, next) {
     next(error);
   }
 }
+
+export async function sugestaoCompra(req, res, next) {
+  try {
+    const produtos = await produtoService.listarSugestaoCompra(req.user.empresaId, req.query);
+    sendSuccess(res, produtos);
+  } catch (error) {
+    next(error);
+  }
+}

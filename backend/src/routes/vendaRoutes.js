@@ -8,5 +8,6 @@ router.use(authMiddleware);
 
 router.post('/', vendaController.finalizar);
 router.get('/', vendaController.listar);
+router.post('/:id/cancelar', vendaController.cancelar);
 
 export default router;

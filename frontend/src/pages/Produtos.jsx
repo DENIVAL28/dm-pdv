@@ -1,6 +1,5 @@
-import React from 'react';
-import { AlertTriangle, Package, PackageX, Plus, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { AlertTriangle, Barcode, Package, PackageX, Plus, Search } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import Card from '../components/Card.jsx';
 import EmptyState from '../components/EmptyState.jsx';
@@ -18,9 +17,19 @@ import { formatCurrency, getStockStatus } from '../utils/formatters.js';
 const INITIAL_FORM = {
   nome: '',
   codigo_barras: '',
+  marca: '',
+  unidade: 'UN',
+  unidade_tributavel: 'UN',
+  custo: '0',
+  margem_percentual: '0',
   preco: '',
   estoque: '',
   estoque_minimo: '5',
+  ncm: '',
+  cfop_padrao: '5102',
+  cest: '',
+  origem_mercadoria: '0',
+  cst_csosn: '102',
 };
 
 export default function Produtos() {
@@ -61,9 +70,19 @@ export default function Produtos() {
     setForm({
       nome: produto.nome,
       codigo_barras: produto.codigo_barras || '',
+      marca: produto.marca || '',
+      unidade: produto.unidade || 'UN',
+      unidade_tributavel: produto.unidade_tributavel || produto.unidade || 'UN',
+      custo: String(produto.custo ?? 0),
+      margem_percentual: String(produto.margem_percentual ?? 0),
       preco: String(produto.preco),
       estoque: String(produto.estoque),
       estoque_minimo: String(produto.estoque_minimo),
+      ncm: produto.ncm || '',
+      cfop_padrao: produto.cfop_padrao || '5102',
+      cest: produto.cest || '',
+      origem_mercadoria: produto.origem_mercadoria || '0',
+      cst_csosn: produto.cst_csosn || '102',
     });
     setFeedback(null);
     setModalOpen(true);
@@ -82,6 +101,8 @@ export default function Produtos() {
       setSaving(true);
       const payload = {
         ...form,
+        custo: Number(form.custo),
+        margem_percentual: Number(form.margem_percentual),
         preco: Number(form.preco),
         estoque: Number(form.estoque),
         estoque_minimo: Number(form.estoque_minimo),
@@ -127,13 +148,16 @@ export default function Produtos() {
 
   const estoqueBaixo = produtos.filter((produto) => getStockStatus(produto).tone === 'warning').length;
   const semEstoque = produtos.filter((produto) => getStockStatus(produto).tone === 'danger').length;
+  const semCadastroFiscal = produtos.filter(
+    (produto) => !produto.ncm || !produto.cfop_padrao || !produto.cst_csosn
+  ).length;
 
   return (
     <div className="page-stack">
       <div className="page-header">
         <div className="page-title">
           <h2>Produtos</h2>
-          <p>Cadastre, edite e acompanhe o estoque minimo de cada item.</p>
+          <p>Cadastro comercial, estoque e base fiscal no mesmo fluxo.</p>
         </div>
 
         <Button type="button" onClick={abrirNovoProduto}>
@@ -148,6 +172,7 @@ export default function Produtos() {
         <Card title="Produtos ativos" value={produtos.length} icon={Package} />
         <Card title="Estoque baixo" value={estoqueBaixo} icon={AlertTriangle} tone="warning" />
         <Card title="Sem estoque" value={semEstoque} icon={PackageX} tone="warning" />
+        <Card title="Pendentes no fiscal" value={semCadastroFiscal} icon={Barcode} tone="warning" />
       </div>
 
       <section className="panel">
@@ -188,7 +213,7 @@ export default function Produtos() {
                   <th>Codigo</th>
                   <th>Preco</th>
                   <th>Estoque</th>
-                  <th>Minimo</th>
+                  <th>Fiscal</th>
                   <th>Status</th>
                   <th>Acoes</th>
                 </tr>
@@ -196,16 +221,44 @@ export default function Produtos() {
               <tbody>
                 {produtos.map((produto) => {
                   const status = getStockStatus(produto);
+                  const fiscalCompleto = produto.ncm && produto.cfop_padrao && produto.cst_csosn;
 
                   return (
                     <tr key={produto.id}>
-                      <td>{produto.nome}</td>
-                      <td>{produto.codigo_barras || '-'}</td>
-                      <td>{formatCurrency(produto.preco)}</td>
-                      <td>{produto.estoque}</td>
-                      <td>{produto.estoque_minimo}</td>
                       <td>
-                        <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+                        <div className="table-cell-stack">
+                          <strong>{produto.nome}</strong>
+                          <span>{produto.marca || 'Sem marca'} | {produto.unidade}</span>
+                        </div>
+                      </td>
+                      <td>{produto.codigo_barras || '-'}</td>
+                      <td>
+                        <div className="table-cell-stack">
+                          <strong>{formatCurrency(produto.preco)}</strong>
+                          <span>Custo {formatCurrency(produto.custo)}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="table-cell-stack">
+                          <strong>{produto.estoque}</strong>
+                          <span>Minimo {produto.estoque_minimo}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="table-cell-stack">
+                          <strong>{produto.ncm || 'NCM pendente'}</strong>
+                          <span>
+                            {produto.cfop_padrao || 'CFOP pendente'} | {produto.cst_csosn || 'CST pendente'}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="table-cell-stack">
+                          <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+                          <StatusBadge tone={fiscalCompleto ? 'success' : 'warning'}>
+                            {fiscalCompleto ? 'Fiscal pronto' : 'Fiscal incompleto'}
+                          </StatusBadge>
+                        </div>
                       </td>
                       <td>
                         <div className="table-actions">
@@ -240,7 +293,7 @@ export default function Produtos() {
         open={modalOpen}
         onClose={fecharModal}
         title={editingId ? 'Editar produto' : 'Novo produto'}
-        description="Preencha os campos necessarios para deixar o item disponivel no PDV."
+        description="Preencha os dados comerciais, de estoque e fiscais do item."
         footer={
           <>
             <Button type="button" variant="ghost" onClick={fecharModal}>
@@ -261,11 +314,59 @@ export default function Produtos() {
             />
           </label>
 
-          <label className="field field-span-2">
+          <label className="field">
             <span>Codigo de barras</span>
             <input
               value={form.codigo_barras}
               onChange={(event) => setForm({ ...form, codigo_barras: event.target.value })}
+            />
+          </label>
+
+          <label className="field">
+            <span>Marca</span>
+            <input
+              value={form.marca}
+              onChange={(event) => setForm({ ...form, marca: event.target.value })}
+            />
+          </label>
+
+          <label className="field">
+            <span>Unidade comercial</span>
+            <input
+              value={form.unidade}
+              onChange={(event) => setForm({ ...form, unidade: event.target.value.toUpperCase() })}
+            />
+          </label>
+
+          <label className="field">
+            <span>Unidade tributavel</span>
+            <input
+              value={form.unidade_tributavel}
+              onChange={(event) =>
+                setForm({ ...form, unidade_tributavel: event.target.value.toUpperCase() })
+              }
+            />
+          </label>
+
+          <label className="field">
+            <span>Custo</span>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.custo}
+              onChange={(event) => setForm({ ...form, custo: event.target.value })}
+            />
+          </label>
+
+          <label className="field">
+            <span>Margem %</span>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.margem_percentual}
+              onChange={(event) => setForm({ ...form, margem_percentual: event.target.value })}
             />
           </label>
 
@@ -299,6 +400,52 @@ export default function Produtos() {
               step="1"
               value={form.estoque_minimo}
               onChange={(event) => setForm({ ...form, estoque_minimo: event.target.value })}
+            />
+          </label>
+
+          <label className="field">
+            <span>NCM</span>
+            <input
+              value={form.ncm}
+              onChange={(event) => setForm({ ...form, ncm: event.target.value })}
+            />
+          </label>
+
+          <label className="field">
+            <span>CFOP padrao</span>
+            <input
+              value={form.cfop_padrao}
+              onChange={(event) => setForm({ ...form, cfop_padrao: event.target.value })}
+            />
+          </label>
+
+          <label className="field">
+            <span>CEST</span>
+            <input
+              value={form.cest}
+              onChange={(event) => setForm({ ...form, cest: event.target.value })}
+            />
+          </label>
+
+          <label className="field">
+            <span>Origem da mercadoria</span>
+            <select
+              value={form.origem_mercadoria}
+              onChange={(event) =>
+                setForm({ ...form, origem_mercadoria: event.target.value })
+              }
+            >
+              <option value="0">0 - Nacional</option>
+              <option value="1">1 - Estrangeira importacao direta</option>
+              <option value="2">2 - Estrangeira mercado interno</option>
+            </select>
+          </label>
+
+          <label className="field">
+            <span>CST / CSOSN</span>
+            <input
+              value={form.cst_csosn}
+              onChange={(event) => setForm({ ...form, cst_csosn: event.target.value })}
             />
           </label>
         </form>

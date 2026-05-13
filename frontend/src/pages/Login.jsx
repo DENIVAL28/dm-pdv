@@ -1,11 +1,28 @@
-import React from 'react';
-import { LockKeyhole, Package, Receipt } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { LockKeyhole, Package, Receipt, ShieldCheck } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '../components/Button.jsx';
 import FeedbackBanner from '../components/FeedbackBanner.jsx';
 import { login } from '../services/authService.js';
 import { saveSession } from '../services/session.js';
+
+const HIGHLIGHTS = [
+  {
+    icon: Receipt,
+    label: 'Caixa',
+    text: 'Venda com leitura, carrinho e fechamento no mesmo fluxo.',
+  },
+  {
+    icon: Package,
+    label: 'Cadastro',
+    text: 'Produtos, clientes e estoque organizados no mesmo sistema.',
+  },
+  {
+    icon: ShieldCheck,
+    label: 'Consulta',
+    text: 'Resumo do dia e relatórios para acompanhar o movimento.',
+  },
+];
 
 export default function Login() {
   const navigate = useNavigate();
@@ -23,7 +40,7 @@ export default function Login() {
 
       const data = await login({ email, senha });
       saveSession(data);
-      navigate('/', { replace: true });
+      navigate('/app', { replace: true });
     } catch (error) {
       setErro(error.message);
     } finally {
@@ -32,10 +49,10 @@ export default function Login() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-shell">
-        <section className="login-panel">
-          <div className="login-panel-top">
+    <div className="login-page auth-page">
+      <div className="auth-shell">
+        <section className="auth-panel">
+          <div className="auth-panel-top">
             <div className="brand large">
               <div className="brand-mark">DM</div>
               <div>
@@ -44,52 +61,43 @@ export default function Login() {
               </div>
             </div>
 
-            <span className="sidebar-chip">Acesso local</span>
+            <Link to="/" className="auth-backlink">
+              Voltar para a apresentação
+            </Link>
           </div>
 
-          <div className="login-copy">
-            <h1>Acesso ao caixa e a retaguarda.</h1>
-            <p>Entre para vender, consultar estoque, cadastrar itens e acompanhar o movimento do dia.</p>
+          <div className="auth-copy">
+            <span className="overview-label">Acesso ao sistema</span>
+            <h1>Entrar para operar o mercado.</h1>
+            <p>
+              Use o acesso local para abrir o caixa, consultar produtos e acompanhar o
+              movimento do dia.
+            </p>
           </div>
 
-          <div className="login-board">
-            <div className="login-board-copy">
-              <span className="overview-label">Fluxo principal</span>
-              <strong>Venda, baixa de estoque e consulta de resultado no mesmo ambiente.</strong>
-            </div>
+          <div className="auth-highlight-list">
+            {HIGHLIGHTS.map((item) => {
+              const Icon = item.icon;
 
-            <div className="login-board-grid">
-              <div className="info-tile dark">
-                <Receipt size={18} />
-                <div>
-                  <span>Caixa</span>
-                  <strong>Busca de produto, conferencia e fechamento</strong>
+              return (
+                <div className="auth-highlight-item" key={item.label}>
+                  <div className="auth-highlight-icon">
+                    <Icon size={18} />
+                  </div>
+                  <div>
+                    <span>{item.label}</span>
+                    <strong>{item.text}</strong>
+                  </div>
                 </div>
-              </div>
-
-              <div className="info-tile dark">
-                <Package size={18} />
-                <div>
-                  <span>Cadastro</span>
-                  <strong>Produto, cliente e estoque no mesmo painel</strong>
-                </div>
-              </div>
-
-              <div className="info-tile dark">
-                <LockKeyhole size={18} />
-                <div>
-                  <span>Controle</span>
-                  <strong>Relatorios e indicadores de operacao</strong>
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </section>
 
-        <form className="login-card" onSubmit={entrar}>
+        <form className="login-card auth-card" onSubmit={entrar}>
           <div className="panel-title">
             <h2>Entrar</h2>
-            <p>Use o acesso inicial para entrar no ambiente local.</p>
+            <p>Use o acesso do ambiente local para abrir o sistema.</p>
           </div>
 
           {erro ? <FeedbackBanner tone="error">{erro}</FeedbackBanner> : null}
@@ -121,7 +129,8 @@ export default function Login() {
           </div>
 
           <Button type="submit" className="full" disabled={loading}>
-            {loading ? 'Entrando...' : 'Entrar'}
+            <LockKeyhole size={16} />
+            {loading ? 'Entrando...' : 'Entrar no sistema'}
           </Button>
         </form>
       </div>
